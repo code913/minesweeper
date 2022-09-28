@@ -1,8 +1,31 @@
 @import "./reset";
 
+$base: "/textures.svg";
+
 button {
     width: 3rem;
     border: none;
-    border-radius: 5px;
     box-shadow: none;
+}
+
+.cell {
+    background-size: 100% 100%;
+
+    &.hidden {
+        background-image: url("#{$base}#hidden");
+    }
+
+    &.flagged {
+        background-image: url("#{$base}#flagged");
+    }
+
+    @for $i from 0 through 8 {
+        &.num-#{$i} {
+            background-image: url("#{$base}#num-#{$i}")
+        }
+    }
+
+    &.test {
+        background-image: url("#{$base}#test");
+    }
 }

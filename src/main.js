@@ -79,13 +79,10 @@ var board = generateBoard(...BOARD_SIZE, level.bombs);
 const Cell = {
     view({ attrs }) {
         const { x, y, type, hidden } = attrs.cell;
-        let children = !hidden ? calculateNeighbours(attrs.cell).filter(c => c.type === CELL_TYPES.BOMB).length : "";
+        let children = !hidden ? type === CELL_TYPES.BOMB ? "boom" : calculateNeighbours(attrs.cell).filter(c => c.type === CELL_TYPES.BOMB).length : "";
 
         return m("button", {
-            class: `cell-${type}`,
-            style: `
-                ${children ? `background-color: ${COLORS.NUM[children]}` : ""}
-            `,
+            class: `cell ${hidden ? "hidden" : type + (type === CELL_TYPES.NUM ? "-" + children : "")}`,
             onclick() {
                 board[x][y].hidden = false;
 
