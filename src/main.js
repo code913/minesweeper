@@ -28,16 +28,21 @@ const COLORS = {
         0: "hsla(145, 46%, 51%, 1)"
     }
 };
-const BOARD_SIZE = [5, 8];
+const BOARD_SIZE = [15, 12];
 
 // #endregion
 
 // #region Helper functions
 
-function rand(numArr, exclude) {
-    [numArr, exclude] = [Array.isArray(numArr) ? numArr : [0, numArr], exclude || []];
-    let randNum = Math.round(Math.random() * (numArr[1] - numArr[0])) + numArr[0];
-    return exclude.includes(randNum) ? rand(...arguments) : randNum;
+function rand(minmax, exclude) {
+    [min, max, ...exclude] = [
+        [minmax[0] ?? 0, minmax[1] ?? minmax],
+        [exclude]
+    ].flat(1);
+
+    let numArr = Array(max - min - exclude.length).fill(0).map((_, i) => i + 1 + min);
+
+    return numArr[Math.floor(Math.random() * numArr.length)];
 }
 
 function generateBoard(width, height, bombs) {
@@ -45,11 +50,13 @@ function generateBoard(width, height, bombs) {
     board.height = board[0].length;
     board.width = board.length;
     Array(bombs).fill(0).reduce(acc => {
-        let n = Math.floor(rand(width * height * 100 - 1, acc) / 100),
+        let n = rand(width * height - 1, acc),
             x = n % width,
-            y = (n + (height - n % height)) / height;
+            y = Math.floor(n / width);
 
         board[x][y].type = CELL_TYPES.BOMB;
+
+        return acc.concat(n);
     }, []);
 
     return board;
@@ -79,18 +86,23 @@ var board = generateBoard(...BOARD_SIZE, level.bombs);
 const Cell = {
     view({ attrs }) {
         const { x, y, type, hidden } = attrs.cell;
-        let children = !hidden ? type === CELL_TYPES.BOMB ? "boom" : calculateNeighbours(attrs.cell).filter(c => c.type === CELL_TYPES.BOMB).length : "";
 
-        return m("button", {
-            class: `cell ${hidden ? "hidden" : type + (type === CELL_TYPES.NUM ? "-" + children : "")}`,
+        let neighbourBombs = hidden || type === CELL_TYPES.BOMB ? null : calculateNeighbours(attrs.cell).filter(c => c.type === CELL_TYPES.BOMB).length;
+
+        return m("button.cell", {
+            style: `
+                column: ${x + 1},
+                row: ${y + 1}
+            `,
+            class: `${hidden ? "hidden" : type + (type === CELL_TYPES.NUM ? "-" + neighbourBombs : "")}`,
             onclick() {
                 board[x][y].hidden = false;
 
                 if (type === CELL_TYPES.BOMB) {
-                    alert("dumbass you lost");
+                    console.log("you lost :(");
                 }
             }
-        }, children);
+        });
     }
 };
 
@@ -105,13 +117,11 @@ const Board = {
         return m("div", {
             class: "board",
             style: `
-                width: ${BOARD_SIZE[0] * 3}rem;
-                height: ${BOARD_SIZE[1] * 3}rem;
+                width: ${BOARD_SIZE[0] * 2}rem;
+                height: ${BOARD_SIZE[1] * 2}rem;
                 display: grid;
                 grid-template-columns: repeat(${BOARD_SIZE[0]}, 1fr);
                 grid-template-rows: repeat(${BOARD_SIZE[1]}, 1fr);
-                grid-auto-flow: column;
-                gap: 0.25rem;
             `
         }, board.map(row => row.map(cell => m(Cell, { cell })).flat(1)));
     }
