@@ -9,35 +9,28 @@ const CELL_TYPES = {
     BOMB: "bomb"
 };
 const LEVELS = {
-    easy: { name: "easy", bombs: 4 },
-    medium: { name: "medium", bombs: 8 },
-    hard: { name: "hard", bombs: 12 }
-};
-const COLORS = {
-    // https://chakra-ui.com/theme
-    NUM: {
-        9: "hsla(0, 88%, 68%, 1)",
-        8: "hsla(4, 68%, 65%, 1)",
-        7: "hsla(9, 52%, 61%, 1)",
-        6: "hsla(17, 37%, 58%, 1)",
-        5: "hsla(31, 25%, 54%, 1)",
-        4: "hsla(60, 15%, 51%, 1)",
-        3: "hsla(98, 18%, 53%, 1)",
-        2: "hsla(126, 25%, 55%, 1)",
-        1: "hsla(139, 36%, 53%, 1)",
-        0: "hsla(145, 46%, 51%, 1)"
-    }
+    easy: { name: "easy", bombs: 8 },
+    medium: { name: "medium", bombs: 12 },
+    hard: { name: "hard", bombs: 20 }
 };
 const BOARD_SIZE = [15, 12];
+const MAX_RECUR_DEPTH = 2;
 
+// #endregion
+
+// #region State variables
+let level = LEVELS.hard;
+let board = generateBoard(...BOARD_SIZE, level.bombs);
 // #endregion
 
 // #region Helper functions
 
 function rand(minmax, exclude) {
+    let min, max;
+
     [min, max, ...exclude] = [
         [minmax[0] ?? 0, minmax[1] ?? minmax],
-        [exclude]
+        exclude
     ].flat(1);
 
     let numArr = Array(max - min - exclude.length).fill(0).map((_, i) => i + 1 + min);
@@ -47,8 +40,7 @@ function rand(minmax, exclude) {
 
 function generateBoard(width, height, bombs) {
     let board = Array(width).fill(Array(height).fill(0)).map((arr, x) => arr.map((_, y) => ({ x, y, type: CELL_TYPES.NUM, hidden: true })));
-    board.height = board[0].length;
-    board.width = board.length;
+
     Array(bombs).fill(0).reduce(acc => {
         let n = rand(width * height - 1, acc),
             x = n % width,
@@ -59,44 +51,67 @@ function generateBoard(width, height, bombs) {
         return acc.concat(n);
     }, []);
 
+    board = board.map(row => row.map(cell => ({
+        ...cell,
+        neighbourBombs: (
+            cell.type === CELL_TYPES.BOMB
+                ? null
+                : calculateNeighbouringCells(board, cell).filter(c => c.type === CELL_TYPES.BOMB).length
+        )
+    })));
+
     return board;
 }
 
-function calculateNeighbours(cell) {
+function calculateNeighbouringCells(board, cell) {
     let arr = [];
-    for (let x = Math.max(0, cell.x - 1); x <= Math.min(board.width - 1, cell.x + 1); x++) {
-        for (let y = Math.max(0, cell.y - 1); y <= Math.min(board.height - 1, cell.y + 1); y++) {
+    for (let x = Math.max(0, cell.x - 1); x <= Math.min(board.length - 1, cell.x + 1); x++) {
+        for (let y = Math.max(0, cell.y - 1); y <= Math.min(board[0].length - 1, cell.y + 1); y++) {
             if (x === cell.x && y === cell.y) continue;
             arr.push(board[x][y]);
         }
     }
+
     return arr;
 }
 
-// #endregion
+function calculateEmptyCells(cell, curDepth = 1) {
+    let accumulator = [cell];
+    const neighbours = calculateNeighbouringCells(board, cell);
+    const numberedNeighbours = neighbours.filter(c => c.neighbourBombs > 0);
+    const emptyNeighbours = neighbours.filter(c => c.neighbourBombs === 0);
 
-// #region State variables
-// fuck you var haters
-var level = LEVELS.hard;
-var board = generateBoard(...BOARD_SIZE, level.bombs);
+    accumulator.push(...emptyNeighbours);
+
+    if (cell.neighbourBombs === 0) {
+        if (curDepth < MAX_RECUR_DEPTH) {
+            accumulator.push(...emptyNeighbours.map(c => calculateEmptyCells(c, curDepth + 1)).flat(1));
+        } else if (curDepth === MAX_RECUR_DEPTH) {
+            accumulator.push(...numberedNeighbours);
+        }
+    }
+
+    return accumulator;
+}
+
 // #endregion
 
 // #region Components
 
 const Cell = {
     view({ attrs }) {
-        const { x, y, type, hidden } = attrs.cell;
+        const { x, y, type, hidden, neighbourBombs } = attrs.cell;
 
-        let neighbourBombs = hidden || type === CELL_TYPES.BOMB ? null : calculateNeighbours(attrs.cell).filter(c => c.type === CELL_TYPES.BOMB).length;
-
-        return m("button.cell", {
+        return m(`button.cell`, {
             style: `
-                column: ${x + 1},
-                row: ${y + 1}
+                grid-column: ${x + 1};
+                grid-row: ${y + 1};
             `,
             class: `${hidden ? "hidden" : type + (type === CELL_TYPES.NUM ? "-" + neighbourBombs : "")}`,
             onclick() {
-                board[x][y].hidden = false;
+                if (!hidden) return;
+                let emptyCells = calculateEmptyCells(attrs.cell);
+                board = board.map(row => row.map(c => emptyCells.some(_c => _c.x === c.x && _c.y === c.y) ? { ...c, hidden: false } : c));
 
                 if (type === CELL_TYPES.BOMB) {
                     console.log("you lost :(");
