@@ -13,21 +13,6 @@ const LEVELS = {
     medium: { name: "medium", bombs: 12 },
     hard: { name: "hard", bombs: 20 }
 };
-const COLORS = {
-    // https://chakra-ui.com/theme
-    NUM: {
-        9: "hsla(0, 88%, 68%, 1)",
-        8: "hsla(4, 68%, 65%, 1)",
-        7: "hsla(9, 52%, 61%, 1)",
-        6: "hsla(17, 37%, 58%, 1)",
-        5: "hsla(31, 25%, 54%, 1)",
-        4: "hsla(60, 15%, 51%, 1)",
-        3: "hsla(98, 18%, 53%, 1)",
-        2: "hsla(126, 25%, 55%, 1)",
-        1: "hsla(139, 36%, 53%, 1)",
-        0: "hsla(145, 46%, 51%, 1)"
-    }
-};
 const BOARD_SIZE = [15, 12];
 const MAX_RECUR_DEPTH = 3;
 
