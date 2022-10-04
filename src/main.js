@@ -55,8 +55,8 @@ function generateBoard(width, height, bombs) {
         ...cell,
         neighbourBombs: (
             cell.type === CELL_TYPES.BOMB
-            ? null
-            : calculateNeighbouringCells(board, cell).filter(c => c.type === CELL_TYPES.BOMB).length
+                ? null
+                : calculateNeighbouringCells(board, cell).filter(c => c.type === CELL_TYPES.BOMB).length
         )
     })));
 
@@ -75,13 +75,19 @@ function calculateNeighbouringCells(board, cell) {
     return arr;
 }
 
-function calculateEmptyCells(cell, curDepth = 0) {
-    let accumulator = [];
-    const emptyNeighbours = calculateNeighbouringCells(board, cell).filter(c => c.neighbourBombs === 0);
-    if (emptyNeighbours.length) {
-        accumulator.push(...emptyNeighbours);
+function calculateEmptyCells(cell, curDepth = 1) {
+    let accumulator = [cell];
+    const neighbours = calculateNeighbouringCells(board, cell);
+    const numberedNeighbours = neighbours.filter(c => c.neighbourBombs > 0);
+    const emptyNeighbours = neighbours.filter(c => c.neighbourBombs === 0);
+
+    accumulator.push(...emptyNeighbours);
+
+    if (cell.neighbourBombs === 0) {
         if (curDepth < MAX_RECUR_DEPTH) {
             accumulator.push(...emptyNeighbours.map(c => calculateEmptyCells(c, curDepth + 1)).flat(1));
+        } else if (curDepth === MAX_RECUR_DEPTH) {
+            accumulator.push(...numberedNeighbours);
         }
     }
 
@@ -103,9 +109,10 @@ const Cell = {
             `,
             class: `${hidden ? "hidden" : type + (type === CELL_TYPES.NUM ? "-" + neighbourBombs : "")}`,
             onclick() {
+                if (!hidden) return;
                 let emptyCells = calculateEmptyCells(attrs.cell);
-                board = board.map(row => row.map(c => emptyCells.some(_c => _c.x === c && _c.y === c.y) ? { hidden: false, ...c } : c));
-                
+                board = board.map(row => row.map(c => emptyCells.some(_c => _c.x === c.x && _c.y === c.y) ? { ...c, hidden: false } : c));
+
                 if (type === CELL_TYPES.BOMB) {
                     console.log("you lost :(");
                 }
