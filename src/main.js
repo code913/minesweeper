@@ -9,9 +9,9 @@ const CELL_TYPES = {
     BOMB: "bomb"
 };
 const LEVELS = {
-    easy: { name: "easy", bombs: 8 },
-    medium: { name: "medium", bombs: 12 },
-    hard: { name: "hard", bombs: 20 }
+    easy: { name: "easy", bombs: 16 },
+    medium: { name: "medium", bombs: 24 },
+    hard: { name: "hard", bombs: 32 }
 };
 const BOARD_SIZE = [15, 12];
 const MAX_RECUR_DEPTH = 2;
