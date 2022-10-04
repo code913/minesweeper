@@ -65,6 +65,7 @@ function generateBoard(width, height, bombs) {
 }
 
 function calculateNeighbouringCells(board, cell) {
+    console.trace(cell);
     let arr = [];
     for (let x = Math.max(0, cell.x - 1); x <= Math.min(board.width - 1, cell.x + 1); x++) {
         for (let y = Math.max(0, cell.y - 1); y <= Math.min(board.height - 1, cell.y + 1); y++) {
