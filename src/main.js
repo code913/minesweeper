@@ -94,9 +94,9 @@ function calculateNeighbouringCells(board, cell) {
 
 function calculateEmptyCells(cell, curDepth = 0) {
     let accumulator = [];
-    console.log(cell);
-    const emptyNeighbours = calculateNeighbouringCells(board, cell)//.filter(c => console.log({ c }) || c.neighbourBombs === 0);
-    console.log(emptyNeighbours);
+    console.log({ cell });
+    const emptyNeighbours = calculateNeighbouringCells(board, cell).filter(c => console.log({ c }) || c.neighbourBombs === 0);
+    console.log({ emptyNeighbours });
     if (emptyNeighbours.length) {
         accumulator.push(...emptyNeighbours);
         if (curDepth < MAX_RECUR_DEPTH) {
@@ -123,8 +123,8 @@ const Cell = {
             class: `${hidden ? "hidden" : type + (type === CELL_TYPES.NUM ? "-" + neighbourBombs : "")}`,
             onclick() {
                 let emptyCells = calculateEmptyCells(attrs.cell);
-                board = board.map(c => emptyCells.some(_c => _c.x === c && _c.y === c.y) ? { ...c, hidden: false } : c);
-                console.log(emptyCells, board);
+                board = board.map(row => row.map(c => emptyCells.some(_c => _c.x === c && _c.y === c.y) ? { ...c, hidden: false } : c));
+                console.log({ emptyCells, board });
 
                 if (type === CELL_TYPES.BOMB) {
                     console.log("you lost :(");
