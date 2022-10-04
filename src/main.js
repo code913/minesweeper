@@ -14,7 +14,7 @@ const LEVELS = {
     hard: { name: "hard", bombs: 20 }
 };
 const BOARD_SIZE = [15, 12];
-const MAX_RECUR_DEPTH = 3;
+const MAX_RECUR_DEPTH = 2;
 
 // #endregion
 
@@ -40,8 +40,7 @@ function rand(minmax, exclude) {
 
 function generateBoard(width, height, bombs) {
     let board = Array(width).fill(Array(height).fill(0)).map((arr, x) => arr.map((_, y) => ({ x, y, type: CELL_TYPES.NUM, hidden: true })));
-    board.height = board[0].length;
-    board.width = board.length;
+
     Array(bombs).fill(0).reduce(acc => {
         let n = rand(width * height - 1, acc),
             x = n % width,
@@ -65,10 +64,9 @@ function generateBoard(width, height, bombs) {
 }
 
 function calculateNeighbouringCells(board, cell) {
-    console.trace(cell);
     let arr = [];
-    for (let x = Math.max(0, cell.x - 1); x <= Math.min(board.width - 1, cell.x + 1); x++) {
-        for (let y = Math.max(0, cell.y - 1); y <= Math.min(board.height - 1, cell.y + 1); y++) {
+    for (let x = Math.max(0, cell.x - 1); x <= Math.min(board.length - 1, cell.x + 1); x++) {
+        for (let y = Math.max(0, cell.y - 1); y <= Math.min(board[0].length - 1, cell.y + 1); y++) {
             if (x === cell.x && y === cell.y) continue;
             arr.push(board[x][y]);
         }
@@ -79,9 +77,7 @@ function calculateNeighbouringCells(board, cell) {
 
 function calculateEmptyCells(cell, curDepth = 0) {
     let accumulator = [];
-    console.log({ cell });
-    const emptyNeighbours = calculateNeighbouringCells(board, cell).filter(c => console.log({ c }) || c.neighbourBombs === 0);
-    console.log({ emptyNeighbours });
+    const emptyNeighbours = calculateNeighbouringCells(board, cell).filter(c => c.neighbourBombs === 0);
     if (emptyNeighbours.length) {
         accumulator.push(...emptyNeighbours);
         if (curDepth < MAX_RECUR_DEPTH) {
@@ -108,9 +104,8 @@ const Cell = {
             class: `${hidden ? "hidden" : type + (type === CELL_TYPES.NUM ? "-" + neighbourBombs : "")}`,
             onclick() {
                 let emptyCells = calculateEmptyCells(attrs.cell);
-                board = board.map(row => row.map(c => emptyCells.some(_c => _c.x === c && _c.y === c.y) ? { ...c, hidden: false } : c));
-                console.log({ emptyCells, board });
-
+                board = board.map(row => row.map(c => emptyCells.some(_c => _c.x === c && _c.y === c.y) ? { hidden: false, ...c } : c));
+                
                 if (type === CELL_TYPES.BOMB) {
                     console.log("you lost :(");
                 }
