@@ -19,9 +19,8 @@ const MAX_RECUR_DEPTH = 3;
 // #endregion
 
 // #region State variables
-// fuck you var haters
-var level = LEVELS.hard;
-var board = generateBoard(...BOARD_SIZE, level.bombs);
+let level = LEVELS.hard;
+let board = generateBoard(...BOARD_SIZE, level.bombs);
 // #endregion
 
 // #region Helper functions
