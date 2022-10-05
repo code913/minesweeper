@@ -50,3 +50,11 @@ button {
         }
     }
 }
+
+li * {
+    margin-inline: 2ch;
+
+    &:first-child {
+        margin-inline-start: 0;
+    }
+}

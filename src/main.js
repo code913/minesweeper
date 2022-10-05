@@ -128,9 +128,9 @@ const HowToPlay = {
             m("p", "There are hidden bombs scattered around the map. Dig cells to clear areas unlikely to contain bombs. Some cells are numbered, indicating the number of bombs around them. Use big brain logic to flag cells likely to contain bombs. Once all bomb-containing cells are flagged and all other cells cleared, you win! ...or you may dig a cell containing a bomb, in which case you lose"),
             m("h2", "Controls"),
             m("ul", [
-                m("li", ["TAB", "or", "Arrow Keys", "- Select cells"]),
-                m("li", ["SPACE", "or", "Left Click", "- Dig cells"]),
-                m("li", ["F", "or", "Right Click", "- Flag a cell"])
+                m("li", [m("code", "TAB"), "or", m("code", "Arrow Keys"), "- Select cells"]),
+                m("li", [m("code", "SPACE"), "or", m("code", "Left Click"), "- Dig cells"]),
+                m("li", [m("code", "F"), "or", m("code", "Right Click"), "- Flag a cell"])
             ])
         ]);
     }
