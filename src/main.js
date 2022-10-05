@@ -121,20 +121,50 @@ const Cell = {
     }
 };
 
+const HowToPlay = {
+    view() {
+        return m("details", [
+            m("summary", "How to play"),
+            m("p", "There are hidden bombs scattered around the map. Dig cells to clear areas unlikely to contain bombs. Some cells are numbered, indicating the number of bombs around them. Use big brain logic to flag cells likely to contain bombs. Once all bomb-containing cells are flagged and all other cells cleared, you win! ...or you may dig a cell containing a bomb, in which case you lose"),
+            m("h2", "Controls"),
+            m("ul", [
+                m("li", ["TAB", "or", "Arrow Keys", "- Select cells"]),
+                m("li", ["SPACE", "or", "Left Click", "- Dig cells"]),
+                m("li", ["F", "or", "Right Click", "- Flag a cell"])
+            ])
+        ]);
+    }
+}
+
 const Options = {
     view() {
-        return m()
+        return m("form", {
+            onsubmit(event) {
+                event.preventDefault();
+            }
+        })
+    }
+};
+
+const Info = {
+    view() {
+        return m("div.info", [
+            m("header", [
+                m("h1", "Minesweeper!"),
+                m("p", ["created with love by ", m("a", { href: "https://github.com/code913/minesweeper" }, "code913")]),
+            ]),
+            m(HowToPlay),
+            m(Options)
+        ]);
     }
 };
 
 const Board = {
     view() {
-        return m("div", {
-            class: "board",
+        return m("div.board", {
             style: `
                 width: ${BOARD_SIZE[0] * 2}rem;
                 height: ${BOARD_SIZE[1] * 2}rem;
-                display: grid;
                 grid-template-columns: repeat(${BOARD_SIZE[0]}, 1fr);
                 grid-template-rows: repeat(${BOARD_SIZE[1]}, 1fr);
             `
@@ -144,14 +174,7 @@ const Board = {
 
 const Main = {
     view() {
-        return m("main", {
-            style: `
-                display: grid;
-                place-items: center;
-                height: 100vh;
-                width: 100vw;
-            `
-        }, [m(Board)])
+        return m("div.container", [m(Info), m(Board)])
     }
 };
 
