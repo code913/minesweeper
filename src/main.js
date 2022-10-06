@@ -8,7 +8,7 @@ const CELL_TYPES = {
     NUM: "num",
     BOMB: "bomb"
 };
-const LEVELS = {
+const MODES = {
     easy: { name: "easy", bombs: 16 },
     medium: { name: "medium", bombs: 24 },
     hard: { name: "hard", bombs: 32 }
@@ -19,8 +19,8 @@ const MAX_RECUR_DEPTH = 2;
 // #endregion
 
 // #region State variables
-let level = LEVELS.hard;
-let board = generateBoard(...BOARD_SIZE, level.bombs);
+let mode = MODES.hard;
+let board = generateBoard();
 // #endregion
 
 // #region Helper functions
@@ -38,7 +38,8 @@ function rand(minmax, exclude) {
     return numArr[Math.floor(Math.random() * numArr.length)];
 }
 
-function generateBoard(width, height, bombs) {
+function generateBoard() {
+    const [width, height, bombs] = [...BOARD_SIZE, mode.bombs];
     let board = Array(width).fill(Array(height).fill(0)).map((arr, x) => arr.map((_, y) => ({ x, y, type: CELL_TYPES.NUM, hidden: true })));
 
     Array(bombs).fill(0).reduce(acc => {
@@ -142,7 +143,18 @@ const Options = {
             onsubmit(event) {
                 event.preventDefault();
             }
-        })
+        }, [
+            m("label", { for: "game-mode-select" }, "Game mode: "),
+            m("select", {
+                id: "game-mode-select",
+                onchange(e) {
+                    e.preventDefault();
+                    mode = MODES[e.target.value];
+                    console.log(mode, e.target.value);
+                    board = generateBoard();
+                }
+            }, Object.values(MODES).map(({ name, bombs }) => m("option", { value: name, selected: name === mode.name }, `${[name[0].toUpperCase(), ...name.split("").slice(1)].join("")} (${bombs} bombs)`)))
+        ]);
     }
 };
 
