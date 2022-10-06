@@ -33,7 +33,7 @@ function rand(minmax, exclude) {
         exclude
     ].flat(1);
 
-    let numArr = Array(max - min - exclude.length).fill(0).map((_, i) => i + 1 + min);
+    let numArr = Array(max - min - exclude.length).fill(0).map((_, i) => i + 1 + min).filter(n => !exclude.includes(n));
 
     return numArr[Math.floor(Math.random() * numArr.length)];
 }
@@ -150,7 +150,6 @@ const Options = {
                 onchange(e) {
                     e.preventDefault();
                     mode = MODES[e.target.value];
-                    console.log(mode, e.target.value);
                     board = generateBoard();
                 }
             }, Object.values(MODES).map(({ name, bombs }) => m("option", { value: name, selected: name === mode.name }, `${[name[0].toUpperCase(), ...name.split("").slice(1)].join("")} (${bombs} bombs)`)))
