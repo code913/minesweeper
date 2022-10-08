@@ -37,6 +37,22 @@ button {
 
 .cell {
     background-size: 100% 100%;
+    &:hover, &:focus, &:focus-visible, &:focus-within {
+        // the other buttons are very weirdly covering the normal outline
+        // hence using pseudo elements
+        outline: none;
+        &::after {
+            position: relative;
+            top: 0;
+            left: 0;
+            z-index: 99;
+            outline: 1px solid black;
+            content: " ";
+            width: 100%;
+            height: 100%;
+            display: inline-block;
+        }
+    }
 
     @each $type in ("hidden", "flagged", "bomb") {
         &.#{$type} {
@@ -46,7 +62,7 @@ button {
 
     @for $i from 0 through 8 {
         &.num-#{$i} {
-            background-image: url("/num-#{$i}.svg")
+            background-image: url("/num-#{$i}.svg");
         }
     }
 }

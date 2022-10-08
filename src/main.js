@@ -13,13 +13,27 @@ const MODES = {
     medium: { name: "medium", bombs: 24 },
     hard: { name: "hard", bombs: 32 }
 };
+const EVENTS = {
+    CLICK: "click",
+    F: "f",
+    ARROWLEFT: "arrowleft",
+    ARROWUP: "arrowup",
+    ARROWRIGHT: "arrowright",
+    ARROWDOWN: "arrowdown"
+};
 const BOARD_SIZE = [15, 12];
 const MAX_RECUR_DEPTH = 2;
+const COORDS = {
+    [EVENTS.ARROWLEFT]: [-1, 0],
+    [EVENTS.ARROWUP]: [0 ,-1],
+    [EVENTS.ARROWRIGHT]: [1 , 0],
+    [EVENTS.ARROWDOWN]: [0 , 1]
+};
 
 // #endregion
 
 // #region State variables
-let mode = MODES.hard;
+let mode = MODES.easy;
 let board = generateBoard();
 // #endregion
 
@@ -95,6 +109,44 @@ function calculateEmptyCells(cell, curDepth = 1) {
     return accumulator;
 }
 
+function eventHandler(type, event, childInfo) {
+    const { target } = event;
+    let targetCell = childInfo?.cell;
+
+    if (!(targetCell ?? false)) {
+        console.log({ targetCell });
+        const [y, x] = target.style.gridArea.split("/").map(s => +s.trim());
+        targetCell = board[x - 1][y - 1];
+    }
+
+    console.log({ type, event, childInfo, target, targetCell });
+
+    switch (type) {
+        case EVENTS.ARROWLEFT:
+        case EVENTS.ARROWUP:
+        case EVENTS.ARROWRIGHT:
+        case EVENTS.ARROWDOWN:
+            const neighbours = calculateNeighbouringCells(board, targetCell);
+            const coord = COORDS[type];
+            const toFocusCell = neighbours.find(c => targetCell.x + coord[0] === c.x && targetCell.y + coord[1] === c.y);
+            const toFocus = document.querySelector(`#cell-${toFocusCell?.x}-${toFocusCell?.y}`);
+
+            console.log({ neighbours, coord, toFocusCell, toFocus });
+            toFocus?.focus();
+        break;
+        case EVENTS.CLICK:
+            (event.button != 0 && [alert("potato"), console.log(event)]);
+            if (!targetCell.hidden) return;
+            let emptyCells = calculateEmptyCells(targetCell);
+            board = board.map(row => row.map(c => emptyCells.some(_c => _c.x === c.x && _c.y === c.y) ? { ...c, hidden: false } : c));
+
+            if (type === CELL_TYPES.BOMB) {
+                console.log("you lost :(");
+            }
+        break;
+    }
+}
+
 // #endregion
 
 // #region Components
@@ -104,19 +156,14 @@ const Cell = {
         const { x, y, type, hidden, neighbourBombs } = attrs.cell;
 
         return m(`button.cell`, {
+            id: `cell-${x}-${y}`,
             style: `
                 grid-column: ${x + 1};
                 grid-row: ${y + 1};
             `,
             class: `${hidden ? "hidden" : type + (type === CELL_TYPES.NUM ? "-" + neighbourBombs : "")}`,
-            onclick() {
-                if (!hidden) return;
-                let emptyCells = calculateEmptyCells(attrs.cell);
-                board = board.map(row => row.map(c => emptyCells.some(_c => _c.x === c.x && _c.y === c.y) ? { ...c, hidden: false } : c));
-
-                if (type === CELL_TYPES.BOMB) {
-                    console.log("you lost :(");
-                }
+            onclick(event) {
+                eventHandler(EVENTS.CLICK, event, { cell: attrs.cell });
             }
         });
     }
@@ -147,9 +194,9 @@ const Options = {
             m("label", { for: "game-mode-select" }, "Game mode: "),
             m("select", {
                 id: "game-mode-select",
-                onchange(e) {
-                    e.preventDefault();
-                    mode = MODES[e.target.value];
+                onchange(event) {
+                    event.preventDefault();
+                    mode = MODES[event.target.value];
                     board = generateBoard();
                 }
             }, Object.values(MODES).map(({ name, bombs }) => m("option", { value: name, selected: name === mode.name }, `${[name[0].toUpperCase(), ...name.split("").slice(1)].join("")} (${bombs} bombs)`)))
@@ -178,7 +225,18 @@ const Board = {
                 height: ${BOARD_SIZE[1] * 2}rem;
                 grid-template-columns: repeat(${BOARD_SIZE[0]}, 1fr);
                 grid-template-rows: repeat(${BOARD_SIZE[1]}, 1fr);
-            `
+            `,
+            onkeydown(e) {
+                const { target, key } = e;
+                console.log({ e });
+                if (target.classList.contains("cell")) {
+                    let type = EVENTS[key.toUpperCase()];
+
+                    console.log({ type, target, key });
+
+                    if (type) eventHandler(type, e);
+                }
+            }
         }, board.map(row => row.map(cell => m(Cell, { cell })).flat(1)));
     }
 };
