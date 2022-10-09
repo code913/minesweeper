@@ -14,7 +14,8 @@ const MODES = {
     hard: { name: "hard", bombs: 32 }
 };
 const EVENTS = {
-    CLICK: "click",
+    PRIMARYCLICK: "primaryclick",
+    SECONDARYCLICK: "secondaryclick",
     F: "f",
     ARROWLEFT: "arrowleft",
     ARROWUP: "arrowup",
@@ -54,7 +55,7 @@ function rand(minmax, exclude) {
 
 function generateBoard() {
     const [width, height, bombs] = [...BOARD_SIZE, mode.bombs];
-    let board = Array(width).fill(Array(height).fill(0)).map((arr, x) => arr.map((_, y) => ({ x, y, type: CELL_TYPES.NUM, hidden: true })));
+    let board = Array(width).fill(Array(height).fill(0)).map((arr, x) => arr.map((_, y) => ({ x, y, type: CELL_TYPES.NUM, hidden: true, flagged: false })));
 
     Array(bombs).fill(0).reduce(acc => {
         let n = rand(width * height - 1, acc),
@@ -134,15 +135,23 @@ function eventHandler(type, event, childInfo) {
             console.log({ neighbours, coord, toFocusCell, toFocus });
             toFocus?.focus();
         break;
-        case EVENTS.CLICK:
-            (event.button != 0 && [alert("potato"), console.log(event)]);
+        case EVENTS.PRIMARYCLICK:
             if (!targetCell.hidden) return;
+            
             let emptyCells = calculateEmptyCells(targetCell);
             board = board.map(row => row.map(c => emptyCells.some(_c => _c.x === c.x && _c.y === c.y) ? { ...c, hidden: false } : c));
 
             if (type === CELL_TYPES.BOMB) {
                 console.log("you lost :(");
             }
+        break;
+        case EVENTS.SECONDARYCLICK:
+        case EVENTS.F:
+            if (!targetCell.hidden) return;
+            let cell = board[targetCell.x][targetCell.y];
+            cell.flagged = !cell.flagged;
+
+            console.log(cell, board[targetCell.x][targetCell.y]);
         break;
     }
 }
@@ -153,7 +162,7 @@ function eventHandler(type, event, childInfo) {
 
 const Cell = {
     view({ attrs }) {
-        const { x, y, type, hidden, neighbourBombs } = attrs.cell;
+        const { x, y, type, hidden, neighbourBombs, flagged } = attrs.cell;
 
         return m(`button.cell`, {
             id: `cell-${x}-${y}`,
@@ -161,9 +170,9 @@ const Cell = {
                 grid-column: ${x + 1};
                 grid-row: ${y + 1};
             `,
-            class: `${hidden ? "hidden" : type + (type === CELL_TYPES.NUM ? "-" + neighbourBombs : "")}`,
+            class: `${flagged ? "flagged" : hidden ? "hidden" : type + (type === CELL_TYPES.NUM ? "-" + neighbourBombs : "")}`,
             onclick(event) {
-                eventHandler(EVENTS.CLICK, event, { cell: attrs.cell });
+                eventHandler(event.button === 0 ? EVENTS.PRIMARYCLICK : EVENTS.SECONDARYCLICK, event, { cell: attrs.cell });
             }
         });
     }
