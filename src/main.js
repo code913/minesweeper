@@ -32,18 +32,23 @@ const COORDS = {
 };
 const GAME_PLAY_STATES = {
     PLAYING: "playing",
+    W: "winner W",
+    BEING_REKT: "this means you're losing LLLLLL",
     ENDED: "ended"
 };
-
 // #endregion
 
 // #region State variables
-let mode = MODES.easy;
-let board = generateBoard();
-let gameState = {
-    playState: GAME_PLAY_STATES.PLAYING,
-    timeTaken: 0
-};
+let mode;
+let board;
+let gameState;
+
+resetStates();
+
+setInterval(() => {
+    if (gameState.playState === GAME_PLAY_STATES.PLAYING) gameState.timeElapsed += 69
+}, 69);
+
 // #endregion
 
 // #region Helper functions
@@ -146,11 +151,24 @@ function eventHandler(type, event, childInfo) {
             board = board.map(row => row.map(c => emptyCells.some(_c => _c.x === c.x && _c.y === c.y) ? { ...c, hidden: false } : c));
 
             if (targetCell.type === CELL_TYPES.BOMB) {
-                console.log("gameState updated");
-                gameState.playState = GAME_PLAY_STATES.ENDED;
-            }
+                gameState.playState = GAME_PLAY_STATES.BEING_REKT;
 
-            console.log(gameState);
+                let i = 0;
+                board.forEach((row, x) => row.forEach((cell, y) => {
+                    if (cell.type === CELL_TYPES.BOMB) {
+                        i++;
+                        setTimeout(() => {
+                            // mithril's state batching causes some weird stuff to happen
+                            // hence also directly updating the dom buttons alongside updating board
+                            document.querySelector(`button#cell-${x}-${y}`).click();
+                        }, i * 100 + 500);
+                    }
+                }));
+
+                setTimeout(() => {
+                    gameState.playState = GAME_PLAY_STATES.ENDED;
+                }, i * 100 + 1500);
+            }
         break;
         case EVENTS.SECONDARYCLICK:
         case EVENTS.F:
@@ -159,6 +177,20 @@ function eventHandler(type, event, childInfo) {
             cell.flagged = !cell.flagged;
         break;
     }
+}
+
+function formatTime(ms) {
+    return new Date(ms).toISOString().substring(14, 19);
+}
+
+function resetStates() {
+    mode ??= MODES.easy;
+    board = generateBoard();
+    gameState = {
+        playState: GAME_PLAY_STATES.PLAYING,
+        timeElapsed: 0,
+        won: false
+    };
 }
 
 // #endregion
@@ -175,6 +207,7 @@ const Cell = {
                 grid-column: ${x + 1};
                 grid-row: ${y + 1};
             `,
+            tabindex: gameState.playState === GAME_PLAY_STATES.PLAYING ? "0" : "-1",
             class: `${flagged ? "flagged" : hidden ? "hidden" : type + (type === CELL_TYPES.NUM ? "-" + neighbourBombs : "")}`,
             onclick(event) {
                 eventHandler(event.button === 0 ? EVENTS.PRIMARYCLICK : EVENTS.SECONDARYCLICK, event, { cell: attrs.cell });
@@ -211,7 +244,7 @@ const Options = {
                 onchange(event) {
                     event.preventDefault();
                     mode = MODES[event.target.value];
-                    board = generateBoard();
+                    resetStates();
                 }
             }, Object.values(MODES).map(({ name, bombs }) => m("option", { value: name, selected: name === mode.name }, `${[name[0].toUpperCase(), ...name.split("").slice(1)].join("")} (${bombs} bombs)`)))
         ]);
@@ -232,13 +265,20 @@ const Info = {
 };
 
 const Menu = {
-    view({ result = "lost", timeTaken = 42069 }) {
+    view() {
+        const { timeElapsed, won } = gameState;
+
         return m("div.menu", [
             m("section.menu-content", [
-                m("h2", { class: result }, `You ${result}!`),
+                m("h2", { class: won ? "winner" : "major-L" }, `You ${won ? "won :)" : "lost :("}`),
                 m("ul", [
-                    m("li", ["Time taken: ", timeTaken])
-                ])
+                    m("li", ["Time taken: ", formatTime(timeElapsed) ])
+                ]),
+                m("button", {
+                    onclick() {
+                        resetStates();
+                    }
+                }, "Restart game")
             ])
         ]);
     }
@@ -272,7 +312,7 @@ const Main = {
             m(Info),
             m("div.container", [
                 m(Board),
-                gameState.playState === GAME_PLAY_STATES.ENDED ? m(Menu, { gameState }) : null
+                gameState.playState === GAME_PLAY_STATES.ENDED ? m(Menu) : null
             ])
         ];
     }
