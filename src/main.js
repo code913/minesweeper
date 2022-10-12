@@ -30,12 +30,20 @@ const COORDS = {
     [EVENTS.ARROWRIGHT]: [1 , 0],
     [EVENTS.ARROWDOWN]: [0 , 1]
 };
+const GAME_PLAY_STATES = {
+    PLAYING: "playing",
+    ENDED: "ended"
+};
 
 // #endregion
 
 // #region State variables
 let mode = MODES.easy;
 let board = generateBoard();
+let gameState = {
+    playState: GAME_PLAY_STATES.PLAYING,
+    timeTaken: 0
+};
 // #endregion
 
 // #region Helper functions
@@ -115,12 +123,9 @@ function eventHandler(type, event, childInfo) {
     let targetCell = childInfo?.cell;
 
     if (!(targetCell ?? false)) {
-        console.log({ targetCell });
         const [y, x] = target.style.gridArea.split("/").map(s => +s.trim());
         targetCell = board[x - 1][y - 1];
     }
-
-    console.log({ type, event, childInfo, target, targetCell });
 
     switch (type) {
         case EVENTS.ARROWLEFT:
@@ -132,7 +137,6 @@ function eventHandler(type, event, childInfo) {
             const toFocusCell = neighbours.find(c => targetCell.x + coord[0] === c.x && targetCell.y + coord[1] === c.y);
             const toFocus = document.querySelector(`#cell-${toFocusCell?.x}-${toFocusCell?.y}`);
 
-            console.log({ neighbours, coord, toFocusCell, toFocus });
             toFocus?.focus();
         break;
         case EVENTS.PRIMARYCLICK:
@@ -141,17 +145,18 @@ function eventHandler(type, event, childInfo) {
             let emptyCells = calculateEmptyCells(targetCell);
             board = board.map(row => row.map(c => emptyCells.some(_c => _c.x === c.x && _c.y === c.y) ? { ...c, hidden: false } : c));
 
-            if (type === CELL_TYPES.BOMB) {
-                console.log("you lost :(");
+            if (targetCell.type === CELL_TYPES.BOMB) {
+                console.log("gameState updated");
+                gameState.playState = GAME_PLAY_STATES.ENDED;
             }
+
+            console.log(gameState);
         break;
         case EVENTS.SECONDARYCLICK:
         case EVENTS.F:
             if (!targetCell.hidden) return;
             let cell = board[targetCell.x][targetCell.y];
             cell.flagged = !cell.flagged;
-
-            console.log(cell, board[targetCell.x][targetCell.y]);
         break;
     }
 }
@@ -226,6 +231,19 @@ const Info = {
     }
 };
 
+const Menu = {
+    view({ result = "lost", timeTaken = 42069 }) {
+        return m("div.menu", [
+            m("section.menu-content", [
+                m("h2", { class: result }, `You ${result}!`),
+                m("ul", [
+                    m("li", ["Time taken: ", timeTaken])
+                ])
+            ])
+        ]);
+    }
+};
+
 const Board = {
     view() {
         return m("div.board", {
@@ -237,22 +255,26 @@ const Board = {
             `,
             onkeydown(e) {
                 const { target, key } = e;
-                console.log({ e });
+                
                 if (target.classList.contains("cell")) {
                     let type = EVENTS[key.toUpperCase()];
-
-                    console.log({ type, target, key });
 
                     if (type) eventHandler(type, e);
                 }
             }
-        }, board.map(row => row.map(cell => m(Cell, { cell })).flat(1)));
+        }, board.map(row => row.map(cell => m(Cell, { cell }))).flat(2));
     }
 };
 
 const Main = {
     view() {
-        return m("div.container", [m(Info), m(Board)])
+        return [
+            m(Info),
+            m("div.container", [
+                m(Board),
+                gameState.playState === GAME_PLAY_STATES.ENDED ? m(Menu, { gameState }) : null
+            ])
+        ];
     }
 };
 
