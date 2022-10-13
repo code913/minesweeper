@@ -166,6 +166,8 @@ function eventHandler(type, event, childInfo) {
                                 hidden: false,
                                 flagged: false
                             };
+
+                            m.redraw()
                         }, i * 100 + 500);
                     }
                 }));
