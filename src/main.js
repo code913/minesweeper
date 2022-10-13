@@ -32,8 +32,8 @@ const COORDS = {
 };
 const GAME_PLAY_STATES = {
     PLAYING: "playing",
-    W: "winner W",
-    BEING_REKT: "this means you're losing LLLLLL",
+    WON: "W",
+    LOSING: "L",
     ENDED: "ended"
 };
 // #endregion
@@ -153,7 +153,7 @@ function eventHandler(type, event, childInfo) {
             board = board.map(row => row.map(c => emptyCells.some(_c => _c.x === c.x && _c.y === c.y) ? { ...c, hidden: false } : c));
 
             if (targetCell.type === CELL_TYPES.BOMB) {
-                gameState.playState = GAME_PLAY_STATES.BEING_REKT;
+                gameState.playState = GAME_PLAY_STATES.LOSING;
 
                 let i = 0;
                 board.forEach((row, x) => row.forEach((cell, y) => {
@@ -276,7 +276,7 @@ const Menu = {
 
         return m("div.menu", [
             m("section.menu-content", [
-                m("h2", { class: won ? "winner" : "major-L" }, `You ${won ? "won :)" : "lost :("}`),
+                m("h2", { class: won ? "winner" : "loser" }, `You ${won ? "won :)" : "lost :("}`),
                 m("ul", [
                     m("li", ["Time taken: ", formatTime(timeElapsed) ])
                 ]),
