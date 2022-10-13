@@ -175,6 +175,7 @@ function eventHandler(type, event, childInfo) {
                 setTimeout(() => {
                     console.log("ran menu timeout")
                     gameState.playState = GAME_PLAY_STATES.ENDED;
+                    m.redraw();
                 }, i * 100 + 1500);
             }
         break;
