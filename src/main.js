@@ -124,6 +124,8 @@ function calculateEmptyCells(cell, curDepth = 1) {
 }
 
 function eventHandler(type, event, childInfo) {
+    if (gameState.playState !== GAME_PLAY_STATES.PLAYING) return;
+
     const { target } = event;
     let targetCell = childInfo?.cell;
 
@@ -158,14 +160,18 @@ function eventHandler(type, event, childInfo) {
                     if (cell.type === CELL_TYPES.BOMB) {
                         i++;
                         setTimeout(() => {
-                            // mithril's state batching causes some weird stuff to happen
-                            // hence also directly updating the dom buttons alongside updating board
-                            document.querySelector(`button#cell-${x}-${y}`).click();
+                            console.log("ran bomb timeout");
+                            board[x][y] = {
+                                ...cell,
+                                hidden: false,
+                                flagged: false
+                            };
                         }, i * 100 + 500);
                     }
                 }));
 
                 setTimeout(() => {
+                    console.log("ran menu timeout")
                     gameState.playState = GAME_PLAY_STATES.ENDED;
                 }, i * 100 + 1500);
             }
