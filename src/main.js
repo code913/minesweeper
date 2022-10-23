@@ -32,7 +32,7 @@ const COORDS = {
 };
 const GAME_PLAY_STATES = {
     PLAYING: "playing",
-    WON: "W",
+    WINNING: "W",
     LOSING: "L",
     ENDED: "ended"
 };
@@ -130,8 +130,8 @@ function eventHandler(type, event, childInfo) {
     let targetCell = childInfo?.cell;
 
     if (!(targetCell ?? false)) {
-        const [y, x] = target.style.gridArea.split("/").map(s => +s.trim());
-        targetCell = board[x - 1][y - 1];
+        const [, x, y] = target.id.split("-");
+        targetCell = board[x][y];
     }
 
     switch (type) {
@@ -177,14 +177,30 @@ function eventHandler(type, event, childInfo) {
                     gameState.playState = GAME_PLAY_STATES.ENDED;
                     m.redraw();
                 }, i * 100 + 1500);
-            }
+            } else checkWin();
         break;
         case EVENTS.SECONDARYCLICK:
         case EVENTS.F:
             if (!targetCell.hidden) return;
             let cell = board[targetCell.x][targetCell.y];
             cell.flagged = !cell.flagged;
+
+            checkWin();
         break;
+    }
+
+    function checkWin() {
+        if (board.every(row => row.every(cell => cell.type === CELL_TYPES.BOMB ? cell.flagged : !cell.flagged))) {
+            gameState.playState = GAME_PLAY_STATES.WINNING;
+
+            // TODO: Add some animations
+
+            setTimeout(() => {
+                gameState.playState = GAME_PLAY_STATES.ENDED;
+                gameState.won = true;
+                m.redraw();
+            }, 500);
+        }
     }
 }
 
@@ -217,7 +233,7 @@ const Cell = {
                 grid-row: ${y + 1};
             `,
             tabindex: gameState.playState === GAME_PLAY_STATES.PLAYING ? "0" : "-1",
-            class: `${flagged ? "flagged" : hidden ? "hidden" : type + (type === CELL_TYPES.NUM ? "-" + neighbourBombs : "")}`,
+            class: `${flagged ? "flagged" : hidden ? "hidden" : type + (type === CELL_TYPES.NUM ? "-" + neighbourBombs : "")} type-${type}`,
             onclick(event) {
                 eventHandler(event.button === 0 ? EVENTS.PRIMARYCLICK : EVENTS.SECONDARYCLICK, event, { cell: attrs.cell });
             }
@@ -284,8 +300,12 @@ const Menu = {
                     m("li", ["Time taken: ", formatTime(timeElapsed) ])
                 ]),
                 m("button", {
+                    oncreate(vnode) {
+                        vnode.dom.focus();
+                    },
                     onclick() {
                         resetStates();
+                        document.querySelector("#cell-0-0").focus();
                     }
                 }, "Restart game")
             ])
