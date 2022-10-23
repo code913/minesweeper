@@ -1,9 +1,91 @@
 @import "./reset";
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+
+@mixin flex-column-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
 
 *, *::before, *::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+}
+
+body {
+    font-family: Montserrat, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+    @include flex-column-center;
+
+    padding: 2rem;
+    row-gap: 4rem;
+
+    min-height: 100vh;
+    width: 100vw;
+}
+
+.info {
+    width: 60ch;
+    text-align: center;
+}
+
+.board {
+    display: grid;
+}
+
+.menu {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backdrop-filter: blur(2px) brightness(80%);
+
+    &, .menu-content {
+        @include flex-column-center;
+    }
+
+    
+    .menu-content {
+        background-color: #C1C1C1;
+        width: 60%;
+        height: 60%;
+        border-radius: 2rem;
+        animation: scale ease-in-out 0.5s;
+
+        @keyframes scale {
+            from {
+                transform: scale(0%);
+            }
+
+            50% {
+                transform: scale(120%);
+            }
+            
+            to {
+                transform: scale(100%);
+            }
+        }
+
+        h2 {
+            &.winner {
+                color: lightgreen;
+            }
+
+            &.loser {
+                color: red;
+            }
+        }
+    }
+}
+
+.container {
+    // some mf decided that there should be no way to position a child
+    // relative to its CONTAINER instead of the whole viewport
+    // if the container doesn't have a position too
+    position: relative;
 }
 
 button {
@@ -13,6 +95,22 @@ button {
 
 .cell {
     background-size: 100% 100%;
+    &:hover, &:focus, &:focus-visible, &:focus-within {
+        // the other buttons are very weirdly covering the normal outline
+        // hence using pseudo elements
+        outline: none;
+        &::after {
+            position: relative;
+            top: 0;
+            left: 0;
+            z-index: 99;
+            outline: 1px solid black;
+            content: " ";
+            width: 100%;
+            height: 100%;
+            display: inline-block;
+        }
+    }
 
     @each $type in ("hidden", "flagged", "bomb") {
         &.#{$type} {
@@ -22,7 +120,15 @@ button {
 
     @for $i from 0 through 8 {
         &.num-#{$i} {
-            background-image: url("/num-#{$i}.svg")
+            background-image: url("/num-#{$i}.svg");
         }
+    }
+}
+
+li * {
+    margin-inline: 2ch;
+
+    &:first-child {
+        margin-inline-start: 0;
     }
 }
