@@ -160,7 +160,6 @@ function eventHandler(type, event, childInfo) {
                     if (cell.type === CELL_TYPES.BOMB) {
                         i++;
                         setTimeout(() => {
-                            console.log("ran bomb timeout");
                             board[x][y] = {
                                 ...cell,
                                 hidden: false,
@@ -233,7 +232,7 @@ const Cell = {
                 grid-row: ${y + 1};
             `,
             tabindex: gameState.playState === GAME_PLAY_STATES.PLAYING ? "0" : "-1",
-            class: `${flagged ? "flagged" : hidden ? "hidden" : type + (type === CELL_TYPES.NUM ? "-" + neighbourBombs : "")} type-${type}`,
+            class: `${flagged ? "flagged" : hidden ? "hidden" : type + (type === CELL_TYPES.NUM ? "-" + neighbourBombs : "")}`,
             onclick(event) {
                 eventHandler(event.button === 0 ? EVENTS.PRIMARYCLICK : EVENTS.SECONDARYCLICK, event, { cell: attrs.cell });
             }
