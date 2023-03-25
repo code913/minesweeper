@@ -1,3 +1,5 @@
 # minesweeper
 
-very much a work in progress, consider checking out the code in the meantime and laugh at my progress
+currently written in mithril, moving to svelte
+
+does not work for mobile but that might change hopefully
