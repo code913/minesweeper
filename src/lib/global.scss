@@ -28,3 +28,20 @@ body {
 	align-items: center;
 	padding: 5vh 1vw;
 }
+
+button,
+.button {
+	display: inline-block;
+	border: none;
+	color: inherit;
+	font-size: 1rem;
+	border-radius: 1ch;
+	padding: 0.25ch 0.5ch;
+	cursor: pointer;
+	text-align: center;
+	vertical-align: center;
+	box-shadow: none;
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+}
