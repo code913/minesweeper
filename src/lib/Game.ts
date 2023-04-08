@@ -9,6 +9,7 @@ export type Tile = {
     value?: number;
     bomb?: boolean;
     shown: boolean;
+    flagged: boolean;
 };
 
 export class Board {
@@ -29,7 +30,7 @@ export class Board {
         }).bind(this));
         this.tileStore.set(Array(columns * rows)
             .fill(0)
-            .map((_, i) => ({ ...this.convertIntToXY(i), value: 0, shown: false })));
+            .map((_, i) => ({ ...this.convertIntToXY(i), value: 0, shown: false, flagged: false })));
 
         let bombLocations = [];
 
@@ -108,8 +109,9 @@ export class Board {
         let accumulator: Tile[] = [tile], neighbours = this.getNeighbouringTiles(tile);
 
         for (let neighbour of neighbours) {
+            if (neighbour.bomb || neighbour.flagged) continue;
             if (maxDepth > 1) {
-                if (neighbour.value === 0 && !neighbour.bomb) {
+                if (neighbour.value === 0) {
                     accumulator.push(neighbour, ...this.getClearableTiles(neighbour, maxDepth - 1));
                 }
             } else if (neighbour.value > 0) {

@@ -11,3 +11,12 @@ export function randomRange(min: number, max: number, exclude?: number[] | Set<n
 
     return r;
 }
+
+/**
+ * Clamp a value within a range
+ * @param preferred The value to clamp within the range
+ */
+export function clamp(min: number, preferred: number, max: number) {
+    // this code is perfectly fine
+    return Math.max(min, Math.min(preferred, max));
+}
