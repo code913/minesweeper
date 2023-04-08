@@ -34,10 +34,11 @@ export class Board {
         let bombLocations = [];
 
         for (let i = 0; i < bombs; i++) {
-            bombLocations.push(this.convertIntToXY(randomRange(0, columns * rows - 1, bombLocations)));
+            bombLocations.push(randomRange(0, columns * rows - 1, bombLocations));
         }
 
         for (let bomb of bombLocations) {
+            bomb = this.convertIntToXY(bomb);
             this.assign(bomb.x, bomb.y, { bomb: true });
             for (let tile of this.getNeighbouringTiles(bomb)) tile.value++;
         }
@@ -103,24 +104,19 @@ export class Board {
      * When a tile is clicked, this method is invoked to get the number of empty cells around it and the ending numbered cells to quickly clear them out. Takes a tile, and recursively gets empty tiles from it until the max depth limit is reached. The ending numbers are also included.
      * @param {number} maxDepth Maximum amount of distance till which to find empty tiles
      */
-    getClearableTiles(tile: Tile, maxDepth: number = 1): Tile[] {
-        let accumulator = [];
+    getClearableTiles(tile: Tile, maxDepth: number = 4): Tile[] {
+        let accumulator: Tile[] = [tile], neighbours = this.getNeighbouringTiles(tile);
 
-        for (let currentDepth = 0; currentDepth < maxDepth; currentDepth++) {
-            const
-                neighbours = this.getNeighbouringTiles(tile),
-                numberedNeighbours = neighbours.filter(t => t.value > 0),
-                emptyNeighbours = neighbours.filter(t => t.value === 0);
-
-            if (tile.value !== 0) continue;
-
-            if (currentDepth < maxDepth) {
-                accumulator.push(...emptyNeighbours.map(t => [t, this.getClearableTiles(t, maxDepth - 1)]).flat(1));
-            } else {
-                accumulator.push(...numberedNeighbours);
+        for (let neighbour of neighbours) {
+            if (maxDepth > 1) {
+                if (neighbour.value === 0 && !neighbour.bomb) {
+                    accumulator.push(neighbour, ...this.getClearableTiles(neighbour, maxDepth - 1));
+                }
+            } else if (neighbour.value > 0) {
+                accumulator.push(neighbour);
             }
         }
 
-        return accumulator.flat(1);
+        return accumulator;
     }
 }

@@ -1,9 +1,9 @@
 <script lang="ts">
 	import "$lib/global.scss";
-	import { Tile as TileType, Board } from "$lib/Game";
+	import { type Tile as TileType, Board } from "$lib/Game";
 	import Tile from "$lib/Tile.svelte";
 	import { setContext } from "svelte";
-	import { writable, Writable } from "svelte/store";
+	import { writable, type Writable } from "svelte/store";
 
 	const boardSize = [12, 8];
 	const tileSize = "2rem";
