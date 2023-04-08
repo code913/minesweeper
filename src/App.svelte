@@ -5,7 +5,7 @@
 	import { setContext } from "svelte";
 	import { writable, type Writable } from "svelte/store";
 
-	const boardSize = [12, 8];
+	const boardSize = [10, 8];
 	const tileSize = "2rem";
 
 	// TODO: Flip the columns and rows on mobile to make up for shorter width
@@ -28,10 +28,7 @@
 		}
 	}}>Show All</button
 >
-<div
-	class="board"
-	style="--columns: {columns}; --rows: {rows}; --tile-size: {tileSize};"
->
+<div class="board" style="--columns: {columns}; --rows: {rows}; --tile-size: {tileSize};">
 	{#each $tileStore as tile}
 		<Tile {tile} size={tileSize} />
 	{/each}

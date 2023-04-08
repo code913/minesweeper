@@ -16,7 +16,8 @@ export class Board {
     columns: number;
     rows: number;
     tileStore: Writable<Tile[]>
-    _tiles!: Tile[]
+    bombLocations: Tile[] = [];
+    _tiles!: Tile[];
     /**
      * @param {number} columns 
      * @param {number} rows 
@@ -41,6 +42,7 @@ export class Board {
         for (let bomb of bombLocations) {
             bomb = this.convertIntToXY(bomb);
             this.assign(bomb.x, bomb.y, { bomb: true });
+            this.bombLocations.push(bomb);
             for (let tile of this.getNeighbouringTiles(bomb)) tile.value++;
         }
     }

@@ -24,11 +24,11 @@
         return {
             duration: transitionDuration,
             easing: sineOut,
-            css: (t, u) =>
-                `transform: rotate(${r}deg) translate(${x}%, ${y}%);`.replace(
-                    /\d+(?![);])/g,
-                    (n) => (u * +n).toFixed(3)
-                ) + `opacity: ${1.25 * t}`,
+            css: (t, u) => {
+                let c = `transform: rotate(${r}deg) translate(${x}%, ${y}%);`.replace(/[0-9\-.]+/g, (n) => (u * +n).toFixed(3)) + `opacity: ${t.toFixed(3)}`;
+                // console.log(c);
+                return c;
+            },
         };
     }
 
@@ -36,12 +36,16 @@
         if (shown || flagged) return;
 
         for (let t of board.getClearableTiles(tile))
-            board.assign(t.x, t.y, { shown: true });
+            board.assign(t.x, t.y, {
+                shown: true,
+            });
     }
 
     function flagTile() {
         resetTimeout();
-        board.assign(x, y, { flagged: !flagged });
+        board.assign(x, y, {
+            flagged: !flagged,
+        });
     }
 
     function startTimeout() {
@@ -67,26 +71,20 @@
     function keyboardHandler(e: KeyboardEvent) {
         if (e.key === "f") return flagTile();
         if (e.key.startsWith("Arrow")) {
-            const index = ["Up", "Right", "Down", "Left"].indexOf(
-                e.key.slice(5)
-            );
+            const index = ["Up", "Right", "Down", "Left"].indexOf(e.key.slice(5));
             const yMap = [-1, 0, 1, 0];
 
-            const el = document.querySelector(
-                `.y-${clamp(0, yMap[index] + y, board.columns - 1)}.x-${clamp(
-                    0,
-                    yMap[(index + 1) % 4] + x,
-                    board.rows - 1
-                )}`
-            ) satisfies HTMLElement;
-            console.log(index, e.key, yMap, el.focus());
+            (document.querySelector(`.y-${clamp(0, yMap[index] + y, board.rows - 1)}.x-${clamp(0, yMap[(index + 1) % 4] + x, board.columns - 1)}`) as HTMLElement).focus();
         }
     }
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
 <button
     class="tile y-{y} x-{x}"
+    class:shown
+    style:grid-area="{y + 1} / {x + 1}"
+    style:--size={size}
+    style:--bg={(x + y) % 2 === 1 ? "#84B3E7" : "#97CCF8"}
     on:touchstart={startTimeout}
     on:mousedown={startTimeout}
     on:mouseup={endTimeout}
@@ -95,20 +93,13 @@
     on:touchend={endTimeout}
     on:click={clearTiles}
     on:keydown={keyboardHandler}
-    style:grid-area="{y + 1} / {x + 1}"
-    style:--size={size}
 >
     {#key shown}
-        <span
-            in:fade={{ duration: transitionDuration, easing: sineOut }}
-            out:outTransition
-            class="tile-content"
-            class:shown
-        >
+        <span in:fade={{ duration: transitionDuration, easing: sineOut }} out:outTransition class="tile-content" class:shown style:--color="hsl({value * 40}deg, 70%, 50%)">
             {#if shown}
                 {#if bomb}
                     💣
-                {:else}
+                {:else if value > 0}
                     {value}
                 {/if}
             {:else if flagged}
@@ -130,18 +121,10 @@
         place-items: stretch;
         width: var(--size);
         aspect-ratio: 1;
-        background: blanchedalmond;
-        overflow: clip;
-        // TODO: Figure out how to not make the other tiles overlap the css outline
-        border: {
-            radius: 0;
-            style: solid;
-            width: 2px;
-            color: transparent;
-        }
+        background-color: var(--bg);
 
         &:where(:hover, :focus, :focus-visible, :focus-within) {
-            border-color: black;
+            z-index: 1; // required for outline to not get covered by the tiles
         }
 
         .tile-content {
@@ -149,8 +132,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #fff6;
             font-size: 1.75rem;
+            color: var(--color);
+        }
+
+        &.shown {
+            .tile-content {
+                backdrop-filter: saturate(50%);
+            }
         }
     }
 </style>
