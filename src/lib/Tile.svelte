@@ -11,12 +11,17 @@
     let { x, y, value, bomb, shown, flagged } = tile;
     $: ({ x, y, value, bomb, shown, flagged } = tile);
     let pressTimeout: number | null = null;
+    let board = getContext<Board>("board");
+    let isMobile = getContext<boolean>("isMobile");
 
-    const board = getContext<Board>("board");
-    const transitionDuration = 500;
+    const colors = {
+        hidden: ["#97CCF8", "#84B3E7"],
+        shown: ["#d7b899", "#e5c29f"],
+    };
+    const transitionDuration = 250;
     const pressCooldown = 250;
 
-    function outTransition(node) {
+    function outTransition(node: HTMLSpanElement) {
         const x = randomRange(-20, 20),
             y = -100,
             r = randomRange(-60, 60);
@@ -24,11 +29,8 @@
         return {
             duration: transitionDuration,
             easing: sineOut,
-            css: (t, u) => {
-                let c = `transform: rotate(${r}deg) translate(${x}%, ${y}%);`.replace(/[0-9\-.]+/g, (n) => (u * +n).toFixed(3)) + `opacity: ${t.toFixed(3)}`;
-                // console.log(c);
-                return c;
-            },
+            css: (t: number, u: number) =>
+                `transform: rotate(${r}deg) translate(${x}%, ${y}%);`.replace(/[0-9\-.]+/g, (n) => (u * +n).toFixed(3)) + `opacity: ${t.toFixed(3)}`,
         };
     }
 
@@ -48,7 +50,7 @@
         });
     }
 
-    function startTimeout() {
+    function press() {
         resetTimeout();
         pressTimeout = setTimeout(() => {
             flagTile();
@@ -63,7 +65,7 @@
         }
     }
 
-    function endTimeout() {
+    function release() {
         resetTimeout();
         clearTiles();
     }
@@ -74,7 +76,11 @@
             const index = ["Up", "Right", "Down", "Left"].indexOf(e.key.slice(5));
             const yMap = [-1, 0, 1, 0];
 
-            (document.querySelector(`.y-${clamp(0, yMap[index] + y, board.rows - 1)}.x-${clamp(0, yMap[(index + 1) % 4] + x, board.columns - 1)}`) as HTMLElement).focus();
+            (
+                document.querySelector(
+                    `.y-${clamp(0, yMap[index] + y, board.rows - 1)}.x-${clamp(0, yMap[(index + 1) % 4] + x, board.columns - 1)}`
+                ) as HTMLElement
+            ).focus();
         }
     }
 </script>
@@ -84,18 +90,24 @@
     class:shown
     style:grid-area="{y + 1} / {x + 1}"
     style:--size={size}
-    style:--bg={(x + y) % 2 === 1 ? "#84B3E7" : "#97CCF8"}
-    on:touchstart={startTimeout}
-    on:mousedown={startTimeout}
-    on:mouseup={endTimeout}
+    on:touchstart={press}
+    on:mousedown={press}
+    on:mouseup={release}
     on:mouseleave={resetTimeout}
-    on:touchcancel={endTimeout}
-    on:touchend={endTimeout}
+    on:touchcancel={release}
+    on:touchend={release}
     on:click={clearTiles}
     on:keydown={keyboardHandler}
 >
     {#key shown}
-        <span in:fade={{ duration: transitionDuration, easing: sineOut }} out:outTransition class="tile-content" class:shown style:--color="hsl({value * 40}deg, 70%, 50%)">
+        <span
+            in:fade={{ duration: transitionDuration, easing: sineOut }}
+            out:outTransition
+            class="tile-content"
+            class:shown
+            style:color="hsl({200 + value * 20}deg, 100%, 40%)"
+            style:background-color={colors[shown ? "shown" : "hidden"][(x + y) % 2]}
+        >
             {#if shown}
                 {#if bomb}
                     💣
@@ -133,12 +145,16 @@
             align-items: center;
             justify-content: center;
             font-size: 1.75rem;
-            color: var(--color);
         }
 
         &.shown {
             .tile-content {
                 backdrop-filter: saturate(50%);
+                font: {
+                    weight: bolder;
+                    family: monospace;
+                }
+                line-height: 1;
             }
         }
     }
