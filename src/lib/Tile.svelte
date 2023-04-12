@@ -10,7 +10,8 @@
 
     let { x, y, value, bomb, shown, flagged } = tile;
     $: ({ x, y, value, bomb, shown, flagged } = tile);
-    let pressTimeout: number | null = null;
+    let pressTimeout: number = null;
+    let releaseTimeout: number = null;
     let board = getContext<Board>("board");
     let isMobile = getContext<boolean>("isMobile");
 
@@ -19,7 +20,7 @@
         shown: ["#d7b899", "#e5c29f"],
     };
     const transitionDuration = 250;
-    const pressCooldown = 250;
+    const pressCooldown = 300;
 
     function outTransition(node: HTMLSpanElement) {
         const x = randomRange(-20, 20),
@@ -44,34 +45,36 @@
     }
 
     function flagTile() {
-        resetTimeout();
+        resetPressTimeout();
         board.assign(x, y, {
             flagged: !flagged,
         });
     }
 
-    function press() {
-        resetTimeout();
-        pressTimeout = setTimeout(() => {
-            flagTile();
-            resetTimeout();
-        }, pressCooldown);
+    function resetPressTimeout() {
+        clearTimeout(pressTimeout);
+        pressTimeout = null;
     }
 
-    function resetTimeout() {
-        if (pressTimeout !== null) {
-            clearTimeout(pressTimeout);
-            pressTimeout = null;
-        }
+    function setPressTimeout(callback: () => void) {
+        resetPressTimeout();
+        pressTimeout = setTimeout(callback, pressCooldown);
     }
 
-    function release() {
-        resetTimeout();
-        clearTiles();
+    function clickHandler(e: MouseEvent) {
+        resetPressTimeout();
+        // Right click or double click/tap to flag tile
+        if (e.button !== 0 || e.detail > 1) return flagTile();
+
+        // Single click/tap to clear tiles
+        setPressTimeout(clearTiles);
     }
 
     function keyboardHandler(e: KeyboardEvent) {
+        // F key to flag tile
         if (e.key === "f") return flagTile();
+
+        // Arrow keys to move around the board
         if (e.key.startsWith("Arrow")) {
             const index = ["Up", "Right", "Down", "Left"].indexOf(e.key.slice(5));
             const yMap = [-1, 0, 1, 0];
@@ -90,13 +93,8 @@
     class:shown
     style:grid-area="{y + 1} / {x + 1}"
     style:--size={size}
-    on:touchstart={press}
-    on:mousedown={press}
-    on:mouseup={release}
-    on:mouseleave={resetTimeout}
-    on:touchcancel={release}
-    on:touchend={release}
-    on:click={clearTiles}
+    on:mouseleave={resetPressTimeout}
+    on:click={clickHandler}
     on:keydown={keyboardHandler}
 >
     {#key shown}
