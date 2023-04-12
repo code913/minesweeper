@@ -20,7 +20,7 @@
         shown: ["#d7b899", "#e5c29f"],
     };
     const transitionDuration = 250;
-    const pressCooldown = 300;
+    const pressCooldown = 200;
 
     function outTransition(node: HTMLSpanElement) {
         const x = randomRange(-20, 20),
@@ -93,7 +93,6 @@
     class:shown
     style:grid-area="{y + 1} / {x + 1}"
     style:--size={size}
-    on:mouseleave={resetPressTimeout}
     on:click={clickHandler}
     on:keydown={keyboardHandler}
 >
