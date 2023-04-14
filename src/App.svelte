@@ -48,6 +48,15 @@
 		}}>Show All</button
 	>
 	<button on:click={reset}>Reset</button>
+	<label>
+		Menu page:
+		<select bind:value={menuState.page}>
+			<option value="resultScreen">result screen</option>
+			<option value="settings">settings</option>
+			<option value="tutorial">tutorial</option>
+		</select>
+	</label>
+	<button on:click={() => (menuState.open = !menuState.open)}>Open/Close menu</button>
 </header>
 {#if board}
 	<div class="wrapper">
@@ -57,7 +66,6 @@
 			{/each}
 		</div>
 		{#if menuState.open}
-			<menu />
 			<div class="menu" in:fade>
 				<!-- wish we had a #switch statement -->
 				{#if menuState.page === "resultScreen"}
