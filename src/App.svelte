@@ -1,33 +1,44 @@
 <script lang="ts">
-	import "$lib/global.scss";
-	import { type Tile as TileType, Board } from "$lib/Game";
+	import { Board, type MenuState, type Tile as TileType } from "$lib/Game";
 	import Tile from "$lib/Tile.svelte";
-	import { setContext } from "svelte";
+	import "$lib/global.scss";
+	import { onMount } from "svelte";
 	import { writable, type Writable } from "svelte/store";
+	import { fade } from "svelte/transition";
 
 	const boardSize: [number, number] = [10, 8];
-	const tileSize = "min(4rem, 8vmin)";
+	const tileSize = "min(48px, 4rem, 10vw)";
 
 	let tileStore: Writable<TileType[]> = writable([]);
+	let result: string | null = null;
+	let menuState: MenuState = {
+		open: false,
+		page: "resultScreen",
+	};
 	let columns: number, rows: number, board: Board, isMobile: boolean;
 
-	$: setContext("isMobile", isMobile);
-	$: setContext("board", board);
-
 	function updateSize() {
-		isMobile = window.innerWidth <= 800;
-		[columns, rows] = isMobile ? boardSize.reverse() : boardSize;
+		isMobile = window.innerWidth <= 700;
+		[columns, rows] = isMobile ? [...boardSize].reverse() : boardSize;
 		board = new Board(columns, rows, 8, tileStore);
 	}
+
+	function reset() {
+		updateSize();
+		result = null;
+		menuState.open = false;
+	}
+
+	onMount(() => {
+		updateSize();
+
+		new ResizeObserver(updateSize).observe(document.body);
+	});
 </script>
 
-<svelte:window on:load={updateSize} on:resize={updateSize} />
-
-<header>
+<header style:margin-bottom="1rem">
 	<h1>Minesweeper</h1>
-	<h2>Being re-written in Svelte</h2>
-</header>
-{#if board}
+	<!-- these buttons are for testing -->
 	<button
 		on:click={() => {
 			for (let i = 0; i < columns * rows; i++) {
@@ -36,10 +47,29 @@
 			}
 		}}>Show All</button
 	>
-	<div class="board" style="--columns: {columns}; --rows: {rows}; --tile-size: {tileSize};">
-		{#each $tileStore as tile}
-			<Tile {tile} size={tileSize} />
-		{/each}
+	<button on:click={reset}>Reset</button>
+</header>
+{#if board}
+	<div class="wrapper">
+		<div class="board" style="--columns: {columns}; --rows: {rows}; --tile-size: {tileSize}; pointer-events: {result ? 'none' : 'auto'};">
+			{#each $tileStore as tile}
+				<Tile {tile} size={tileSize} {board} bind:result bind:menuState />
+			{/each}
+		</div>
+		{#if menuState.open}
+			<menu />
+			<div class="menu" in:fade>
+				<!-- wish we had a #switch statement -->
+				{#if menuState.page === "resultScreen"}
+					<p>You {result}!</p>
+					<button on:click={reset}>Restart</button>
+				{:else if menuState.page === "settings"}
+					<form class="settings" on:submit={(e) => e.preventDefault()} />
+				{:else if menuState.page === "tutorial"}
+					<p>currently a work in progress lol</p>
+				{/if}
+			</div>
+		{/if}
 	</div>
 {/if}
 
@@ -49,14 +79,21 @@
 	}
 
 	.board {
-		$columns: var(--columns);
-		$rows: var(--rows);
-		$tile-size: var(--tile-size);
 		display: grid;
-		grid-template: {
-			columns: repeat($columns, $tile-size);
-			rows: repeat($rows, $tile-size);
-		}
-		border: 3px solid #0008;
+		gap: 0;
+		outline: 3px solid #0008;
+	}
+
+	.wrapper {
+		position: relative;
+	}
+
+	.menu {
+		position: absolute;
+		inset: 0;
+		z-index: 2;
+		display: grid;
+		backdrop-filter: blur(5px) brightness(70%);
+		place-items: center;
 	}
 </style>

@@ -3,6 +3,11 @@ import {
     randomRange
 } from "./utils";
 
+export type MenuState = {
+    open: boolean;
+    page: "resultScreen" | "settings" | "tutorial";
+}
+
 export type Tile = {
     x: number;
     y: number;

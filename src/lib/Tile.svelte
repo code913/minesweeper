@@ -1,19 +1,21 @@
 <script lang="ts">
     import { randomRange, clamp } from "$lib/utils";
-    import { getContext } from "svelte";
-    import { sineOut } from "svelte/easing";
+    import { cubicOut } from "svelte/easing";
     import { fade } from "svelte/transition";
-    import { type Tile, Board } from "$lib/Game";
+    import { type MenuState, type Tile, Board } from "$lib/Game";
 
     export let tile: Tile;
-    export let size;
+    export let size: string;
+    export let board: Board;
+
+    // bind these
+    export let result: string | null;
+    export let menuState: MenuState;
 
     let { x, y, value, bomb, shown, flagged } = tile;
     $: ({ x, y, value, bomb, shown, flagged } = tile);
     let pressTimeout: number = null;
     let releaseTimeout: number = null;
-    let board = getContext<Board>("board");
-    let isMobile = getContext<boolean>("isMobile");
 
     const colors = {
         hidden: ["#97CCF8", "#84B3E7"],
@@ -21,6 +23,7 @@
     };
     const transitionDuration = 250;
     const pressCooldown = 200;
+    const bombCooldown = 50;
 
     function outTransition(node: HTMLSpanElement) {
         const x = randomRange(-20, 20),
@@ -29,19 +32,35 @@
 
         return {
             duration: transitionDuration,
-            easing: sineOut,
+            easing: cubicOut,
             css: (t: number, u: number) =>
                 `transform: rotate(${r}deg) translate(${x}%, ${y}%);`.replace(/[0-9\-.]+/g, (n) => (u * +n).toFixed(3)) + `opacity: ${t.toFixed(3)}`,
         };
     }
 
     function clearTiles() {
-        if (shown || flagged) return;
-
-        for (let t of board.getClearableTiles(tile))
+        function showTile(t: Tile) {
             board.assign(t.x, t.y, {
                 shown: true,
             });
+        }
+
+        if (shown || flagged) return;
+        if (bomb) {
+            result = "lost";
+            for (let i in board.bombLocations) {
+                const bombTile = board.bombLocations[i];
+                setTimeout(() => {
+                    showTile(bombTile);
+                }, +i * bombCooldown);
+            }
+
+            return setTimeout(() => {
+                menuState.open = true;
+            }, board.bombLocations.length * bombCooldown + 500);
+        }
+
+        for (let t of board.getClearableTiles(tile)) showTile(t);
     }
 
     function flagTile() {
@@ -98,7 +117,7 @@
 >
     {#key shown}
         <span
-            in:fade={{ duration: transitionDuration, easing: sineOut }}
+            in:fade={{ duration: transitionDuration, easing: cubicOut }}
             out:outTransition
             class="tile-content"
             class:shown
@@ -122,6 +141,7 @@
     .tile {
         display: grid;
         padding: 0;
+        margin: 0;
         border-radius: 0;
         grid-template: {
             columns: 100%;
