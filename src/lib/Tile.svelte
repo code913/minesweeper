@@ -33,8 +33,7 @@
         return {
             duration: transitionDuration,
             easing: cubicOut,
-            css: (t: number, u: number) =>
-                `transform: rotate(${r}deg) translate(${x}%, ${y}%);`.replace(/[0-9\-.]+/g, (n) => (u * +n).toFixed(3)) + `opacity: ${t.toFixed(3)}`,
+            css: (t: number, u: number) => `transform: rotate(${r}deg) translate(${x}%, ${y}%);`.replace(/[0-9\-.]+/g, (n) => (u * +n).toFixed(3)) + `opacity: ${t.toFixed(3)}`,
         };
     }
 
@@ -68,6 +67,11 @@
         board.assign(x, y, {
             flagged: !flagged,
         });
+        board.flagLocations[flagged ? "delete" : "add"](board.convertXYToInt(x, y));
+        if (board.bombLocations.length === board.flagLocations.size && board.bombLocations.every((b) => board.flagLocations.has(board.convertXYToInt(b.x, b.y)))) {
+            result = "won";
+            menuState.open = true;
+        }
     }
 
     function resetPressTimeout() {
@@ -98,32 +102,14 @@
             const index = ["Up", "Right", "Down", "Left"].indexOf(e.key.slice(5));
             const yMap = [-1, 0, 1, 0];
 
-            (
-                document.querySelector(
-                    `.y-${clamp(0, yMap[index] + y, board.rows - 1)}.x-${clamp(0, yMap[(index + 1) % 4] + x, board.columns - 1)}`
-                ) as HTMLElement
-            ).focus();
+            (document.querySelector(`.y-${clamp(0, yMap[index] + y, board.rows - 1)}.x-${clamp(0, yMap[(index + 1) % 4] + x, board.columns - 1)}`) as HTMLElement).focus();
         }
     }
 </script>
 
-<button
-    class="tile y-{y} x-{x}"
-    class:shown
-    style:grid-area="{y + 1} / {x + 1}"
-    style:--size={size}
-    on:click={clickHandler}
-    on:keydown={keyboardHandler}
->
+<button class="tile y-{y} x-{x}" class:shown style:grid-area="{y + 1} / {x + 1}" style:--size={size} on:click={clickHandler} on:keydown={keyboardHandler}>
     {#key shown}
-        <span
-            in:fade={{ duration: transitionDuration, easing: cubicOut }}
-            out:outTransition
-            class="tile-content"
-            class:shown
-            style:color="hsl({200 + value * 20}deg, 100%, 40%)"
-            style:background-color={colors[shown ? "shown" : "hidden"][(x + y) % 2]}
-        >
+        <span in:fade={{ duration: transitionDuration, easing: cubicOut }} out:outTransition class="tile-content" class:shown style:color="hsl({200 + value * 20}deg, 100%, 40%)" style:background-color={colors[shown ? "shown" : "hidden"][(x + y) % 2]}>
             {#if shown}
                 {#if bomb}
                     💣

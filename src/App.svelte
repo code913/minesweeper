@@ -3,6 +3,7 @@
 	import Tile from "$lib/Tile.svelte";
 	import "$lib/global.scss";
 	import { onMount } from "svelte";
+	import { bounceIn, cubicIn } from "svelte/easing";
 	import { writable, type Writable } from "svelte/store";
 	import { fade } from "svelte/transition";
 
@@ -66,7 +67,14 @@
 			{/each}
 		</div>
 		{#if menuState.open}
-			<div class="menu" in:fade>
+			<div
+				class="menu"
+				in:fade={{
+					easing: cubicIn,
+					duration: 400,
+				}}
+				on:introend={(e) => (e.currentTarget.querySelector("button") ?? e.currentTarget).focus()}
+			>
 				<!-- wish we had a #switch statement -->
 				{#if menuState.page === "resultScreen"}
 					<p>You {result}!</p>
