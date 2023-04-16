@@ -4,15 +4,18 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview"
   },
-  "devDependencies": {
-    "vite": "^3.1.0"
-  },
   "dependencies": {
-    "mithril": "^2.2.2",
-    "sass": "^1.55.0"
+    "@fontsource/inter": "^4.5.15",
+    "@sveltejs/vite-plugin-svelte": "^2.0.3",
+    "sass": "^1.60.0",
+    "svelte": "^3.55.1",
+    "vite": "^4.2.0"
+  },
+  "devDependencies": {
+    "svelte-preprocess": "^5.0.3"
   }
 }
